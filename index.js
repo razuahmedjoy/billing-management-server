@@ -29,8 +29,10 @@ async function run() {
         app.post("/api/add-billing", async (req, res) => {
 
             const bill = req.body;
+            // console.log(bill)
             const inserted = await billsCollection.insertOne(bill);
             res.send({ success: true, inserted })
+            // res.send("ok")
 
         })
 
@@ -38,44 +40,59 @@ async function run() {
 
         app.get("/api/billing-list", async (req, res) => {
 
+            const { page } = req.query;
+            if (page) {
+                const bills = await billsCollection.find({}).skip(page * 10).limit(10).sort({ _id: -1 }).toArray()
+                res.send(bills)
+            }
+            else {
 
-            const bills = await billsCollection.find({}).toArray();
-            res.send(bills)
+                const bills = await billsCollection.find({}).sort({ _id: -1 }).toArray();
+                res.send(bills)
+            }
+
+
+           
 
         })
 
 
         // update billing
-        app.get("/api/update-billing/:id", async (req, res) => {
+        app.put("/api/update-billing/:id", async (req, res) => {
 
             const { id } = req.params
             const data = req.body;
 
+            // console.log(id)
+            // console.log(data)
             const filter = {
-                id: ObjectId(id)
+                _id: ObjectId(id)
             }
-            const options = {upsert: true}
+            const options = { upsert: true }
 
-            const updateDoc = data;
+            const updateDoc = {
+                $set: data
+            };
 
-            const result = await billsCollection.updateOne(filter,updateDoc,options);
-            
+            const result = await billsCollection.updateOne(filter, updateDoc, options);
+
             res.send(result);
+
 
         })
 
         // delete billing
 
-        app.get("/api/delete-billing/:id", async (req, res) => {
+        app.delete("/api/delete-billing/:id", async (req, res) => {
 
             const { id } = req.params
             const filter = {
-                id: ObjectId(id)
+                _id: ObjectId(id)
             }
-      
+
 
             const result = await billsCollection.deleteOne(filter);
-            
+
             res.send(result);
 
         })
