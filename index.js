@@ -17,7 +17,25 @@ app.use(express.json());
 const uri = process.env.DB_URL;
 const client = new MongoClient(uri);
 
+const verifyToken = (req, res, next) => {
 
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'UnAuthorized Access' })
+
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ message: 'Access Forbidden' });
+        }
+        req.decoded = decoded;
+        console.log(req.decoded);
+        next();
+    })
+}
 
 async function run() {
     try {
